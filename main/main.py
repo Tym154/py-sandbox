@@ -12,7 +12,7 @@ pygame.display.set_caption("py_sandbox")
 
 # Constants
 PARTICLE_SCALE = 4
-void_density = 5
+void_density = 0.5
 FPS = 60
 BG_COLOR = (30, 30, 30)
 
