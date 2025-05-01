@@ -1,4 +1,3 @@
-import os
 import pygame
 from grid_class import Grid
 from particle_types import PARTICLE_TYPES
