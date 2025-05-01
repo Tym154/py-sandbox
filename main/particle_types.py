@@ -1,5 +1,6 @@
 PARTICLE_TYPES = {
-    'sand': {'color': (255, 255, 0), 'weight': 2},
-    'water': {'color': (0, 0, 255), 'weight': 1},
-    'smoke': {'color': (150, 150, 150), 'weight': 0.1}
+    'sand': {'color': (255, 255, 0), 'density': 2, 'movable' : 1, 'type' : 'loose'},
+    'water': {'color': (0, 0, 255), 'density': 1, 'movable' : 1, 'type' : 'liquid'},
+    'smoke': {'color': (150, 150, 150), 'density': 0.1, 'movable' : 1, 'type' : 'gas'},
+    'metal': {'color': (150, 150, 150), 'density': 10, 'movable' : 0, 'type' : 'solid'}
 }
