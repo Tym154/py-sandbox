@@ -34,21 +34,17 @@ class Grid:
                 elif not PARTICLE_TYPES[particle.p_type]['movable']:
                     continue
 
-                
+
                 if PARTICLE_TYPES[particle.p_type]['type'] == 'loose':
                     new_x, new_y = self.loose_movement(particle, x, y)
                     updated_coords[x][y] = 0
                     updated_coords[new_x][new_y] = 1
 
-                elif PARTICLE_TYPES[particle.p_type]['type'] == 'liquid':
+                elif PARTICLE_TYPES[particle.p_type]['type'] == 'liquid' or 'gas':
                     new_x, new_y = self.liquid_movement(particle, x, y)
                     updated_coords[x][y] = 0
                     updated_coords[new_x][new_y] = 1
 
-                elif PARTICLE_TYPES[particle.p_type]['type'] == 'gas':
-                    new_x, new_y = self.gas_movement(particle, x, y)
-                    updated_coords[x][y] = 0
-                    updated_coords[new_x][new_y] = 1
 
     
 
@@ -63,113 +59,72 @@ class Grid:
 
         current_x, current_y = x_cord, y_cord
 
-        for _ in range(fall_steps):
+        for i in range(fall_steps):
             if current_y + 1 >= self.height:
-                break
+                break  # hit bottom of grid
 
-            if self.contents[current_x][current_y + 1] == 0:
-                self.contents[current_x][current_y + 1] = particle
-                self.contents[current_x][current_y] = 0
+            if self.contents[current_x][current_y + 1] == 0 or self.contents[current_x][current_y + 1].density < particle.density:
+                self.swap_particles(current_x, current_y, current_x, current_y + 1)
                 current_y += 1
             else:
                 offsets = [-1, 1]
                 random.shuffle(offsets)
+                # Try diagonally down-left
                 moved = False
                 for offset in offsets:
                     new_x = current_x + offset
                     if 0 <= new_x < self.width and current_y + 1 < self.height:
-                        if self.contents[new_x][current_y + 1] == 0:
-                            self.contents[new_x][current_y + 1] = particle
-                            self.contents[current_x][current_y] = 0
+                        if self.contents[new_x][current_y + 1] == 0 or self.contents[new_x][current_y + 1].density < particle.density:
+                            self.swap_particles(current_x, current_y, new_x, current_y + 1)
                             current_x, current_y = new_x, current_y + 1
                             moved = True
                             break
                 if not moved:
-                    break
+                    break  # fully blocked — stop falling
 
         return current_x, current_y
 
     def liquid_movement(self, particle, x_cord, y_cord):
-        max_fall_speed = min(particle.density, 8)
-
-        particle.velocity_y += self.gravity_acceleration
-        if particle.velocity_y > max_fall_speed:
-            particle.velocity_y = max_fall_speed
-
-        fall_steps = int(particle.velocity_y)
-
         current_x, current_y = x_cord, y_cord
 
-        for _ in range(fall_steps):
-            if current_y + 1 >= self.height:
-                break
-            if self.contents[current_x][current_y + 1] == 0:
-                self.contents[current_x][current_y + 1] = particle
-                self.contents[current_x][current_y] = 0
-                current_y += 1
+        density_diff = self.void_density - particle.density
 
-            else:
-                offsets = [-1, 1]
-                random.shuffle(offsets)
-                moved = False
+        if abs(density_diff) < 0.01:
+            return current_x, current_y  # no movement if densities equal or close enough
 
-                for offset in offsets:
-                    new_x = current_x + offset
-                    if 0 <= new_x < self.width and self.contents[new_x][current_y] == 0:
-                        self.contents[new_x][current_y] = particle
+        if density_diff > 0:
+            # Buoyant behavior: moves up preferentially
+            moves = [
+                [(0, -1)],  # Up
+                [(-1, -1), (1, -1)],  # Up-left, Up-right
+                [(-1, 0), (1, 0)]  # Left, Right
+            ]
+        else:
+            # Sinking behavior: moves down preferentially
+            moves = [
+                [(0, 1)],  # Down
+                [(-1, 1), (1, 1)],  # Down-left, Down-right
+                [(-1, 0), (1, 0)]  # Left, Right
+            ]
+
+        for move_vec in moves:
+            random.shuffle(move_vec)
+
+            for dx, dy in move_vec:
+                new_x = current_x + dx
+                new_y = current_y + dy
+
+                if 0 <= new_x < self.width and 0 <= new_y < self.height:
+                    if self.contents[new_x][new_y] == 0:
+                        self.contents[new_x][new_y] = particle
                         self.contents[current_x][current_y] = 0
-                        current_x = new_x
-                        moved = True
-                        break
+                        return new_x, new_y
 
-                if not moved:
-                    break
-
+        # No move possible
         return current_x, current_y
 
-
-    def gas_movement(self, particle, x_cord, y_cord):
-        buoyancy_acceleration = self.gravity_acceleration * (self.void_density - particle.density) / self.void_density
-
-        particle.velocity_y -= buoyancy_acceleration
-
-        max_rise_speed = min(6, abs(buoyancy_acceleration * 10))
-
-        if abs(particle.velocity_y) > max_rise_speed:
-            particle.velocity_y = -max_rise_speed
-
-        rise_steps = int(abs(particle.velocity_y))
-        if rise_steps == 0:
-            return x_cord, y_cord 
-
-        current_x, current_y = x_cord, y_cord
-
-        for _ in range(rise_steps):
-            if current_y - 1 < 0:
-                break  # reached top of grid
-
-            if self.contents[current_x][current_y - 1] == 0:
-                # Move up
-                self.contents[current_x][current_y - 1] = particle
-                self.contents[current_x][current_y] = 0
-                current_y -= 1
-
-            else:
-                # Try spreading left or right randomly
-                offsets = [-1, 1]
-                random.shuffle(offsets)
-                moved = False
-
-                for offset in offsets:
-                    new_x = current_x + offset
-                    if 0 <= new_x < self.width and self.contents[new_x][current_y] == 0:
-                        self.contents[new_x][current_y] = particle
-                        self.contents[current_x][current_y] = 0
-                        current_x = new_x
-                        moved = True
-                        break
-
-                if not moved:
-                    break  # fully blocked
-
-        return current_x, current_y
+    def swap_particles(self, x1, y1, x2, y2):
+        temp = self.contents[x1][y1]
+        self.contents[x1][y1] = self.contents[x2][y2]
+        self.contents[x2][y2] = temp
+        return
