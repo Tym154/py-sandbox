@@ -22,7 +22,7 @@ grid = Grid(height, width, PARTICLE_SCALE, 0.5, void_density)
 clock = pygame.time.Clock()
 
 # Materials
-materials = ['discard','metal', 'water', 'sand', 'smoke']
+materials = ['discard','metal', 'water', 'sand', 'smoke', 'metal_dust']
 selected_material = materials[0]
 
 # Brush control
