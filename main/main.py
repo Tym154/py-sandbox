@@ -6,12 +6,12 @@ from particle_types import PARTICLE_TYPES
 pygame.init()
 
 # Window setup
-width, height = 800, 600
+width, height = 1200, 1000
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("py_sandbox")
 
 # Constants
-PARTICLE_SCALE = 4
+PARTICLE_SCALE = 16
 void_density = 0.5
 FPS = 60
 BG_COLOR = (30, 30, 30)
@@ -73,12 +73,6 @@ while running:
                     selected_material = mat
                     break
 
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFTBRACKET:  # [ key
-                brush_size = max(1, brush_size - 1)
-            elif event.key == pygame.K_RIGHTBRACKET:  # ] key
-                brush_size = min(max_brush_size, brush_size + 1)
-
     if pygame.mouse.get_pressed()[0]:
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if mouse_y > button_height + button_margin * 2:
@@ -112,11 +106,6 @@ while running:
                     particle.color,
                     (x * PARTICLE_SCALE, y * PARTICLE_SCALE, PARTICLE_SCALE, PARTICLE_SCALE)
                 )
-
-    # Draw brush size display
-    font = pygame.font.SysFont(None, 24)
-    brush_text = font.render(f"Brush: {brush_size}", True, (200, 200, 200))
-    screen.blit(brush_text, (button_margin, button_height + button_margin * 2))
 
     pygame.display.flip()
 
