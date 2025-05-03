@@ -61,7 +61,7 @@ class Grid:
 
         for i in range(fall_steps):
             if current_y + 1 >= self.height:
-                break  # hit bottom of grid
+                break
 
             if self.contents[current_x][current_y + 1] == 0 or self.contents[current_x][current_y + 1].density < particle.density:
                 self.swap_particles(current_x, current_y, current_x, current_y + 1)
@@ -69,8 +69,8 @@ class Grid:
             else:
                 offsets = [-1, 1]
                 random.shuffle(offsets)
-                # Try diagonally down-left
                 moved = False
+
                 for offset in offsets:
                     new_x = current_x + offset
                     if 0 <= new_x < self.width and current_y + 1 < self.height:
@@ -80,7 +80,7 @@ class Grid:
                             moved = True
                             break
                 if not moved:
-                    break  # fully blocked — stop falling
+                    break
 
         return current_x, current_y
 
@@ -90,17 +90,15 @@ class Grid:
         density_diff = self.void_density - particle.density
 
         if abs(density_diff) < 0.01:
-            return current_x, current_y  # no movement if densities equal or close enough
+            return current_x, current_y
 
         if density_diff > 0:
-            # Buoyant behavior: moves up preferentially
             moves = [
                 [(0, -1)],  # Up
                 [(-1, -1), (1, -1)],  # Up-left, Up-right
                 [(-1, 0), (1, 0)]  # Left, Right
             ]
         else:
-            # Sinking behavior: moves down preferentially
             moves = [
                 [(0, 1)],  # Down
                 [(-1, 1), (1, 1)],  # Down-left, Down-right
@@ -120,7 +118,6 @@ class Grid:
                         self.contents[current_x][current_y] = 0
                         return new_x, new_y
 
-        # No move possible
         return current_x, current_y
 
     def swap_particles(self, x1, y1, x2, y2):
